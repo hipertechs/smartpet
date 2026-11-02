@@ -1,0 +1,76 @@
+{
+  "id": "br.com.smartpet.app",
+  "name": "SmartPet - Gestão & Banho e Tosa",
+  "short_name": "SmartPet",
+  "description": "Sistema Completo de Gestão de Pet Shop, Banho e Tosa, Pacotes Fidelidade e PDV Operacional",
+  "start_url": "./index.html#dashboard",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "orientation": "portrait-primary",
+  "background_color": "#0f172a",
+  "theme_color": "#0d9488",
+  "lang": "pt-BR",
+  "categories": ["business", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Banho e Tosa (Esteira)",
+      "short_name": "Esteira",
+      "description": "Acessar o Kanban da Esteira Operacional de Banho e Tosa",
+      "url": "./index.html#agenda",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Bancada Touch (Equipe)",
+      "short_name": "Bancada",
+      "description": "Painel de toque rápido para tosadores e banhistas",
+      "url": "./index.html#equipe",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Frente de Caixa (PDV)",
+      "short_name": "PDV",
+      "description": "Abrir o ponto de venda e recebimento",
+      "url": "./index.html#pdv",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Auto-Cadastro de Cliente",
+      "short_name": "Cadastro",
+      "description": "Formulário de cadastro e assinatura de contrato",
+      "url": "./index.html#cadastro",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

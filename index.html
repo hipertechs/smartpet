@@ -2,8 +2,21 @@
 <html lang="pt-BR" class="scroll-smooth">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>SmartPet | Ecossistema Tudo-em-Um para Pet Shops e Clínicas</title>
+
+  <!-- PWA & Mobile App Config -->
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="theme-color" content="#0d9488" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="SmartPet" />
+  <meta name="application-name" content="SmartPet" />
+  <meta name="msapplication-TileColor" content="#0d9488" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <link rel="icon" type="image/svg+xml" href="icons/icon.svg" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
 
   <!-- Tailwind CSS via CDN com personalização de cores -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -134,15 +147,20 @@
           </nav>
 
           <!-- Botões de Ação do Header -->
-          <div class="flex items-center gap-3">
+          <div class="flex items-center gap-2 sm:gap-3">
+            <button onclick="handlePwaInstallClick()" 
+                    class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 text-slate-950 text-xs font-black shadow-md shadow-teal-500/20 hover:opacity-95 transition">
+              <i class="fa-solid fa-mobile-screen"></i>
+              <span>Instalar App</span>
+            </button>
             <button onclick="switchView('dashboard')" 
                     class="hidden sm:inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-300 text-sm font-semibold text-slate-700 hover:bg-slate-100 hover:text-brand-700 transition">
               <i class="fa-solid fa-right-to-bracket text-brand-600"></i>
               Login
             </button>
             <button onclick="switchView('dashboard')" 
-                    class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold shadow-md shadow-brand-600/25 transition-all hover:shadow-lg hover:shadow-brand-600/35 hover:-translate-y-0.5">
-              <span>Acessar Sistema</span>
+                    class="inline-flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs sm:text-sm font-bold shadow-md shadow-brand-600/25 transition-all hover:shadow-lg hover:shadow-brand-600/35 hover:-translate-y-0.5">
+              <span>Entrar no Sistema</span>
               <i class="fa-solid fa-arrow-right text-xs"></i>
             </button>
           </div>
@@ -645,6 +663,13 @@
             <span id="topbarCash">Caixa Aberto: R$ 3.820,00</span>
           </div>
 
+          <!-- Botão Instalar App Mobile / PWA -->
+          <button type="button" id="btnInstallAppTopbar" onclick="handlePwaInstallClick()"
+                  class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 text-slate-950 font-black text-xs shadow-sm hover:opacity-95 transition" title="Instalar SmartPet como Aplicativo no Celular ou Computador">
+            <i class="fa-solid fa-mobile-screen"></i>
+            <span class="hidden sm:inline">Instalar App</span>
+          </button>
+
           <!-- Dropdown + Acesso Rápido (Etapa 1) -->
           <div class="relative" id="quickActionWrapper">
             <button type="button" onclick="toggleQuickActionDropdown()"
@@ -767,7 +792,7 @@
       </header>
 
       <!-- ÁREA DE CONTEÚDO DINÂMICO DOS MÓDULOS -->
-      <main class="flex-1 overflow-y-auto p-4 sm:p-6 custom-scroll" id="mainTabContainer">
+      <main class="flex-1 overflow-y-auto p-4 sm:p-6 pb-24 lg:pb-6 custom-scroll" id="mainTabContainer">
 
         <!-- =================================================== -->
         <!-- MÓDULO 1: VISÃO GERAL (DASHBOARD EXECUTIVO 360º)    -->
@@ -3516,6 +3541,137 @@
 
     </div>
 
+    <!-- BACKDROP DA SIDEBAR MOBILE (QUANDO ABERTA) -->
+    <div id="sidebarBackdrop" onclick="toggleSidebar(false)" class="hidden fixed inset-0 z-40 bg-slate-950/60 backdrop-blur-xs lg:hidden transition-opacity"></div>
+
+    <!-- ======================================================== -->
+    <!-- MOBILE BOTTOM NAVIGATION BAR (BARRA DE NAVEGAÇÃO DO APP) -->
+    <!-- ======================================================== -->
+    <nav id="mobileBottomNav" class="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 flex items-center justify-around px-2 py-1.5 shadow-2xl safe-area-bottom">
+      
+      <!-- Início -->
+      <button type="button" onclick="navigateToTab('visao-geral')" id="mobileNav-visao-geral"
+              class="mobile-bottom-nav-btn flex-1 py-1 flex flex-col items-center justify-center text-slate-400 hover:text-white transition active:scale-95">
+        <i class="fa-solid fa-chart-pie text-lg mb-0.5"></i>
+        <span class="text-[10px] font-semibold tracking-tight">Início</span>
+      </button>
+
+      <!-- Banho & Tosa -->
+      <button type="button" onclick="navigateToTab('agenda'); setAgendaViewMode('kanban');" id="mobileNav-agenda"
+              class="mobile-bottom-nav-btn flex-1 py-1 flex flex-col items-center justify-center text-teal-400 font-bold transition active:scale-95">
+        <div class="relative">
+          <i class="fa-solid fa-calendar-check text-lg mb-0.5 text-teal-400 scale-110"></i>
+          <span class="absolute -top-1 -right-2 bg-brand-500 text-white text-[8px] font-black px-1 rounded-full" id="mobileAgendaBadge">35</span>
+        </div>
+        <span class="text-[10px] font-semibold tracking-tight">Banho & Tosa</span>
+      </button>
+
+      <!-- Botão Central Flutuante: Novo Pet (+) -->
+      <button type="button" onclick="openNewPetModal()" 
+              class="flex flex-col items-center justify-center -mt-5 transition active:scale-90" title="Novo Pet">
+        <div class="w-12 h-12 rounded-full bg-gradient-to-tr from-brand-600 to-teal-400 text-white flex items-center justify-center shadow-lg shadow-teal-500/40 border-4 border-slate-900">
+          <i class="fa-solid fa-plus text-lg"></i>
+        </div>
+        <span class="text-[9px] font-bold text-teal-300 mt-0.5">+ Pet</span>
+      </button>
+
+      <!-- Bancada Touch (Banhistas / Tosadores) -->
+      <button type="button" onclick="navigateToTab('agenda'); setAgendaViewMode('equipe');" id="mobileNav-equipe"
+              class="mobile-bottom-nav-btn flex-1 py-1 flex flex-col items-center justify-center text-slate-400 hover:text-white transition active:scale-95">
+        <i class="fa-solid fa-mobile-screen-button text-lg mb-0.5"></i>
+        <span class="text-[10px] font-semibold tracking-tight">Bancada</span>
+      </button>
+
+      <!-- PDV Estoque -->
+      <button type="button" onclick="navigateToTab('estoque'); switchEstoqueSubTab('pdv');" id="mobileNav-estoque"
+              class="mobile-bottom-nav-btn flex-1 py-1 flex flex-col items-center justify-center text-slate-400 hover:text-white transition active:scale-95">
+        <i class="fa-solid fa-cash-register text-lg mb-0.5"></i>
+        <span class="text-[10px] font-semibold tracking-tight">PDV</span>
+      </button>
+
+      <!-- Mais (Abre Menu Lateral Completo) -->
+      <button type="button" onclick="toggleSidebar()"
+              class="mobile-bottom-nav-btn flex-1 py-1 flex flex-col items-center justify-center text-slate-400 hover:text-white transition active:scale-95">
+        <i class="fa-solid fa-bars text-lg mb-0.5"></i>
+        <span class="text-[10px] font-semibold tracking-tight">Mais</span>
+      </button>
+
+    </nav>
+
+  </div>
+
+  <!-- BANNER FLUTUANTE DE INSTALAÇÃO NO CELULAR (PWA) -->
+  <div id="mobilePwaInstallFloat" class="hidden fixed top-3 left-3 right-3 z-50 bg-slate-900/95 text-white p-3 rounded-2xl border border-teal-500/40 shadow-2xl backdrop-blur-md flex items-center justify-between gap-3 animate-fade-in">
+    <div class="flex items-center gap-2.5 min-w-0">
+      <div class="w-9 h-9 rounded-xl bg-brand-600 flex items-center justify-center text-white font-bold text-base flex-shrink-0 shadow-sm">
+        🐾
+      </div>
+      <div class="min-w-0">
+        <p class="font-bold text-xs text-white truncate">Instalar o App SmartPet</p>
+        <p class="text-[10px] text-teal-300 truncate">Acesso rápido em 1 toque na tela inicial</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-1.5 flex-shrink-0">
+      <button onclick="handlePwaInstallClick()" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 text-slate-950 font-black text-xs shadow-sm hover:opacity-95 transition">
+        Instalar
+      </button>
+      <button onclick="dismissMobilePwaBanner()" class="text-slate-400 hover:text-white p-1">
+        <i class="fa-solid fa-xmark text-sm"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL: GUIA DE INSTALAÇÃO DO APP (iOS / ANDROID / DESKTOP) -->
+  <div id="pwaInstallModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 relative">
+      <button onclick="closePwaInstallModal()" class="text-slate-400 hover:text-slate-600 p-2 absolute top-4 right-4">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+
+      <div class="text-center pt-2 pb-4">
+        <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-brand-600 to-teal-400 flex items-center justify-center text-white text-3xl shadow-lg shadow-teal-500/30 mx-auto mb-3">
+          🐾
+        </div>
+        <h3 class="font-extrabold text-lg text-slate-900">Instalar SmartPet no Celular</h3>
+        <p class="text-xs text-slate-500 mt-1">Tenha o aplicativo direto na tela de início com acesso instantâneo e offline</p>
+      </div>
+
+      <!-- Instruções dinâmicas para iOS (Safari) -->
+      <div id="pwaInstallIosSteps" class="p-4 bg-teal-50/60 rounded-2xl border border-teal-200 text-xs text-slate-700 space-y-3">
+        <div class="font-bold text-teal-950 flex items-center gap-2 text-sm">
+          <i class="fa-brands fa-apple text-base"></i> Passo a passo no iPhone / iPad:
+        </div>
+        <div class="flex items-start gap-3">
+          <div class="w-6 h-6 rounded-full bg-teal-200 text-teal-900 font-bold flex items-center justify-center flex-shrink-0 text-xs">1</div>
+          <p>No navegador Safari, toque no ícone de <strong>Compartilhar</strong> <i class="fa-solid fa-arrow-up-from-bracket text-blue-600 text-sm mx-1"></i> (na barra inferior do celular).</p>
+        </div>
+        <div class="flex items-start gap-3">
+          <div class="w-6 h-6 rounded-full bg-teal-200 text-teal-900 font-bold flex items-center justify-center flex-shrink-0 text-xs">2</div>
+          <p>Role o menu para baixo e toque em <strong>"Adicionar à Tela de Início"</strong> <i class="fa-regular fa-square-plus text-slate-800 text-sm mx-1"></i>.</p>
+        </div>
+        <div class="flex items-start gap-3">
+          <div class="w-6 h-6 rounded-full bg-teal-200 text-teal-900 font-bold flex items-center justify-center flex-shrink-0 text-xs">3</div>
+          <p>Toque em <strong>"Adicionar"</strong> no canto superior direito. O ícone da SmartPet será criado na sua tela de apps!</p>
+        </div>
+      </div>
+
+      <!-- Instruções para Android / Chrome -->
+      <div id="pwaInstallAndroidSteps" class="hidden p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xs text-slate-700 space-y-3">
+        <div class="font-bold text-slate-900 flex items-center gap-2 text-sm">
+          <i class="fa-brands fa-android text-emerald-600 text-base"></i> Instalação no Android:
+        </div>
+        <p>Clique no botão abaixo para adicionar o aplicativo diretamente à tela inicial do seu celular:</p>
+        <button type="button" onclick="triggerPwaPromptFromModal()" class="w-full py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm shadow-md transition flex items-center justify-center gap-2">
+          <i class="fa-solid fa-download"></i> Instalar Aplicativo Agora
+        </button>
+      </div>
+
+      <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-center">
+        <button type="button" onclick="closePwaInstallModal()" class="text-xs font-semibold text-slate-500 hover:text-slate-800">
+          Entendi, continuar no navegador
+        </button>
+      </div>
+    </div>
   </div>
 
 
@@ -15226,6 +15382,26 @@
         }
       }
 
+      // Fecha a sidebar no mobile se estiver aberta
+      if (typeof toggleSidebar === 'function' && window.innerWidth < 1024) {
+        toggleSidebar(false);
+      }
+
+      // Atualiza estilo na Bottom Navigation Bar Mobile
+      document.querySelectorAll('.mobile-bottom-nav-btn').forEach(btn => {
+        btn.classList.remove('text-teal-400', 'font-bold');
+        btn.classList.add('text-slate-400');
+        const icon = btn.querySelector('i');
+        if (icon) icon.classList.remove('text-teal-400', 'scale-110');
+      });
+      const activeMobileBtn = document.getElementById(`mobileNav-${tabId}`);
+      if (activeMobileBtn) {
+        activeMobileBtn.classList.remove('text-slate-400');
+        activeMobileBtn.classList.add('text-teal-400', 'font-bold');
+        const icon = activeMobileBtn.querySelector('i');
+        if (icon) icon.classList.add('text-teal-400', 'scale-110');
+      }
+
       // Atualiza Topbar de acordo com o módulo
       const topbarTitle = document.getElementById('topbarTitle');
       const topbarSubtitle = document.getElementById('topbarSubtitle');
@@ -15322,8 +15498,19 @@
       updateGlobalBadges();
     }
 
-    function toggleSidebar() {
-      document.getElementById('sidebar').classList.toggle('-translate-x-full');
+    function toggleSidebar(forceState) {
+      const sidebar = document.getElementById('sidebar');
+      const backdrop = document.getElementById('sidebarBackdrop');
+      if (!sidebar) return;
+
+      const willOpen = (typeof forceState === 'boolean') ? forceState : sidebar.classList.contains('-translate-x-full');
+      if (willOpen) {
+        sidebar.classList.remove('-translate-x-full');
+        if (backdrop) backdrop.classList.remove('hidden');
+      } else {
+        sidebar.classList.add('-translate-x-full');
+        if (backdrop) backdrop.classList.add('hidden');
+      }
     }
 
     function showToast(message) {
@@ -15352,6 +15539,8 @@
 
       // Pets ativos
       document.getElementById('totalActivePetsBadge').textContent = store.pets.length;
+      const mobBadge = document.getElementById('mobileAgendaBadge');
+      if (mobBadge) mobBadge.textContent = store.pets.length;
 
       // Tutores cadastrados
       const tutorsBadge = document.getElementById('totalTutorsBadge');
@@ -22533,6 +22722,7 @@
     const MODAL_DISMISS_CONFIG = [
       { id: 'petDetailModal', closeFn: () => closePetDetailModal() },
       { id: 'newPetModal', closeFn: () => closeNewPetModal() },
+      { id: 'pwaInstallModal', closeFn: () => closePwaInstallModal() },
       { id: 'petPaymentModal', closeFn: () => typeof closePetPaymentModal === 'function' && closePetPaymentModal() },
       { id: 'legalTermModal', closeFn: () => typeof closeLegalTermModal === 'function' && closeLegalTermModal() },
       { id: 'clientContractSigningModal', closeFn: () => typeof closeClientContractSigningModal === 'function' && closeClientContractSigningModal() },
@@ -22590,17 +22780,142 @@
       });
     }
 
+    // --------------------------------------------------------
+    // MÓDULO PWA & APLICATIVO MOBILE INSTALÁVEL
+    // --------------------------------------------------------
+    let deferredPwaPrompt = null;
+
+    function initPwaAppHandlers() {
+      // Registro do Service Worker
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js')
+            .then(reg => {
+              console.log('[SmartPet PWA] Service Worker ativo com sucesso! Escopo:', reg.scope);
+            })
+            .catch(err => {
+              console.warn('[SmartPet PWA] Falha ao registrar Service Worker:', err);
+            });
+        });
+      }
+
+      // Captura evento de instalação nativa no Android / Chrome / Edge
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPwaPrompt = e;
+
+        // Exibe botão no topbar se estiver em navegador instalável
+        const topbarBtn = document.getElementById('btnInstallAppTopbar');
+        if (topbarBtn) topbarBtn.classList.remove('hidden');
+
+        // Exibe banner flutuante no celular se não tiver sido dispensado
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+        const dismissed = sessionStorage.getItem('smartpet_pwa_dismissed');
+        if (!isStandalone && !dismissed && window.innerWidth < 1024) {
+          setTimeout(() => {
+            const floatBanner = document.getElementById('mobilePwaInstallFloat');
+            if (floatBanner) floatBanner.classList.remove('hidden');
+          }, 1500);
+        }
+      });
+
+      // Evento de sucesso de instalação
+      window.addEventListener('appinstalled', () => {
+        deferredPwaPrompt = null;
+        const floatBanner = document.getElementById('mobilePwaInstallFloat');
+        if (floatBanner) floatBanner.classList.add('hidden');
+        const topbarBtn = document.getElementById('btnInstallAppTopbar');
+        if (topbarBtn) topbarBtn.classList.add('hidden');
+        showToast('🎉 Parabéns! O App SmartPet foi instalado com sucesso no seu dispositivo!');
+      });
+
+      // Detecta iOS e exibe banner flutuante se no Safari móvel e não standalone
+      const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+      if (isIos && !isStandalone && !sessionStorage.getItem('smartpet_pwa_dismissed')) {
+        setTimeout(() => {
+          const floatBanner = document.getElementById('mobilePwaInstallFloat');
+          if (floatBanner) floatBanner.classList.remove('hidden');
+        }, 1800);
+      }
+    }
+
+    function handlePwaInstallClick() {
+      // Se houver prompt nativo (Android / Chrome / Edge)
+      if (deferredPwaPrompt) {
+        deferredPwaPrompt.prompt();
+        deferredPwaPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            showToast('Instalando o App SmartPet...');
+          }
+          deferredPwaPrompt = null;
+        });
+        return;
+      }
+
+      // Se for iOS (Safari não emite beforeinstallprompt, exige instruções)
+      const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+      openPwaInstallModal(isIos);
+    }
+
+    function openPwaInstallModal(isIos = false) {
+      const modal = document.getElementById('pwaInstallModal');
+      const iosBox = document.getElementById('pwaInstallIosSteps');
+      const androidBox = document.getElementById('pwaInstallAndroidSteps');
+      if (!modal) return;
+
+      if (isIos) {
+        if (iosBox) iosBox.classList.remove('hidden');
+        if (androidBox) androidBox.classList.add('hidden');
+      } else {
+        if (iosBox) iosBox.classList.add('hidden');
+        if (androidBox) androidBox.classList.remove('hidden');
+      }
+
+      modal.classList.remove('hidden');
+    }
+
+    function closePwaInstallModal() {
+      const modal = document.getElementById('pwaInstallModal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function triggerPwaPromptFromModal() {
+      if (deferredPwaPrompt) {
+        deferredPwaPrompt.prompt();
+        closePwaInstallModal();
+      } else {
+        showToast('Abra o menu do seu navegador (três pontinhos ⋮) e toque em "Instalar aplicativo" ou "Adicionar à tela inicial".');
+      }
+    }
+
+    function dismissMobilePwaBanner() {
+      const floatBanner = document.getElementById('mobilePwaInstallFloat');
+      if (floatBanner) floatBanner.classList.add('hidden');
+      sessionStorage.setItem('smartpet_pwa_dismissed', 'true');
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
+      // Se aberto como App PWA instalado ou com hash #dashboard ou ?app=1, entra direto no sistema
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+      const isAppUrl = window.location.hash.includes('dashboard') || window.location.search.includes('app=1');
+
+      if (isStandalone || isAppUrl) {
+        switchView('dashboard', 'agenda');
+      }
+
       updateGlobalBadges();
       renderKanban();
       renderVisaoGeral();
       renderPacotesModule();
       renderNotificationsList();
       initModalDismissHandlers();
+      initPwaAppHandlers();
     });
 
     if (document.readyState === 'complete' || document.readyState === 'interactive') {
       initModalDismissHandlers();
+      initPwaAppHandlers();
     }
   
 
