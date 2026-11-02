@@ -16432,9 +16432,25 @@
       }
     }
 
-    function closePetDetailModal() {
-      document.getElementById('petDetailModal').classList.add('hidden');
+    function isPetDetailModalDirty() {
+      const weightInput = document.getElementById('newWeightKgInput');
+      if (weightInput && weightInput.value && weightInput.value.trim() !== '') {
+        return true;
+      }
+      return false;
+    }
+
+    function closePetDetailModal(force = false) {
+      if (!force && isPetDetailModalDirty()) {
+        const discard = confirm('Você digitou um novo peso para o pet que ainda não foi registrado.\n\nDeseja realmente fechar e descartar as informações?');
+        if (!discard) return false;
+      }
+      const modal = document.getElementById('petDetailModal');
+      if (modal) modal.classList.add('hidden');
       store.selectedPetIdForModal = null;
+      const weightInput = document.getElementById('newWeightKgInput');
+      if (weightInput) weightInput.value = '';
+      return true;
     }
 
     // RF13: Painel de Checklist Técnico do Tosador / Banhista dentro da Ficha do Pet
@@ -16489,7 +16505,7 @@
       if (nextStatus) {
         // REGRA OBRIGATÓRIA: Bloqueia finalização (PRONTO) se o valor financeiro estiver em aberto
         if (nextStatus === 'pronto' && (!pet.paymentStatus || pet.paymentStatus === 'pendente')) {
-          closePetDetailModal();
+          closePetDetailModal(true);
           showToast(`🔒 Financeiro em aberto! Selecione a modalidade de pagamento para finalizar ${pet.name}.`);
           openPetPaymentModal(pet.id, true);
           return;
@@ -16499,7 +16515,7 @@
         pet.status = nextStatus;
         store.save();
         renderAgenda();
-        closePetDetailModal();
+        closePetDetailModal(true);
         if (fromStatus === 'secagem' && nextStatus === 'pronto') {
           showToast(`⚡ ${pet.name} (Somente Banho): avançou direto para PRONTO!`);
         } else {
@@ -16512,7 +16528,7 @@
         }
       } else {
         if (!pet.paymentStatus || pet.paymentStatus === 'pendente') {
-          closePetDetailModal();
+          closePetDetailModal(true);
           showToast(`🔒 ${pet.name} possui valor em aberto! Realize o pagamento para liberar.`);
           openPetPaymentModal(pet.id, true);
           return;
@@ -16528,7 +16544,7 @@
 
       const message = encodeURIComponent(`Olá ${pet.tutor}! Aqui é da SmartPet. Informamos que seu pet ${pet.name} (${pet.breed}) está na etapa [${pet.status.toUpperCase()}] e recebendo todo carinho da nossa equipe.`);
       showToast(`Disparo WhatsApp enviado para ${pet.tutor} (${pet.phone})`);
-      closePetDetailModal();
+      closePetDetailModal(true);
     }
 
     function deletePetFromModal() {
@@ -16537,7 +16553,7 @@
         store.pets = store.pets.filter(p => p.id !== store.selectedPetIdForModal);
         store.save();
         renderAgenda();
-        closePetDetailModal();
+        closePetDetailModal(true);
         showToast('Agendamento removido com sucesso.');
       }
     }
@@ -16549,10 +16565,32 @@
       document.getElementById('newPetModal').classList.remove('hidden');
     }
 
-    function closeNewPetModal() {
-      document.getElementById('newPetModal').classList.add('hidden');
-      document.getElementById('newPetForm').reset();
+    function isNewPetModalDirty() {
+      const name = document.getElementById('petName')?.value?.trim();
+      const breed = document.getElementById('petBreed')?.value?.trim();
+      const notes = document.getElementById('petNotes')?.value?.trim();
+      const tutorSel = document.getElementById('modalTutorSelector')?.value;
+      const tutor = document.getElementById('petTutor')?.value?.trim();
+      const phone = document.getElementById('petPhone')?.value?.trim();
+      const cpf = document.getElementById('petTutorCpf')?.value?.trim();
+      const addr = document.getElementById('petTutorAddress')?.value?.trim();
+
+      if (name || breed || notes) return true;
+      if (tutorSel === '__new' && (tutor || phone || cpf || addr)) return true;
+      return false;
+    }
+
+    function closeNewPetModal(force = false) {
+      if (!force && isNewPetModalDirty()) {
+        const discard = confirm('Existem dados preenchidos no cadastro do pet que ainda não foram salvos.\n\nDeseja realmente descartar e fechar a janela?');
+        if (!discard) return false;
+      }
+      const modal = document.getElementById('newPetModal');
+      if (modal) modal.classList.add('hidden');
+      const form = document.getElementById('newPetForm');
+      if (form) form.reset();
       switchNewPetModalTab('tutor');
+      return true;
     }
 
     function populateModalTutorSelector(selectedId = null) {
@@ -16823,7 +16861,7 @@
 
       store.pets.unshift(newPet);
       store.save();
-      closeNewPetModal();
+      closeNewPetModal(true);
       renderAgenda();
       updateGlobalBadges();
       showToast(`${name} (${breed}) e Tutor ${savedTutor.name} salvos com sucesso!`);
@@ -17086,7 +17124,7 @@
       const pet = store.pets.find(p => p.id === petId);
       if (!pet) return;
 
-      closePetDetailModal();
+      closePetDetailModal(true);
       currentPaymentPetId = petId;
       shouldFinalizePetAfterPayment = finalizeOnSuccess;
 
@@ -17310,8 +17348,13 @@
       initSignatureCanvas(tutor.name, tutor.termoSigned);
     }
 
-    function closeLegalTermModal() {
+    function closeLegalTermModal(force = false) {
+      if (!force && typeof signatureHasInk !== 'undefined' && signatureHasInk) {
+        const discard = confirm('Existe uma assinatura no termo que ainda não foi salva.\n\nDeseja realmente descartar e fechar?');
+        if (!discard) return false;
+      }
       document.getElementById('legalTermModal').classList.add('hidden');
+      return true;
     }
 
     function initSignatureCanvas(tutorName, alreadySigned) {
@@ -17411,7 +17454,7 @@
       const tutor = store.tutors.find(t => t.id === currentLegalTermTutorId);
       const pet = store.pets.find(p => p.id === currentLegalTermPetId);
       const now = new Date();
-      const timestamp = `21/09/2026 ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      const timestamp = `${now.toLocaleDateString('pt-BR')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
       const protocol = `SP-2026-${Math.floor(1000 + Math.random() * 9000)}`;
 
       if (tutor) {
@@ -17427,7 +17470,8 @@
       const stamp = document.getElementById('signatureSignedStamp');
       if (stamp) stamp.classList.remove('hidden');
 
-      closeLegalTermModal();
+      signatureHasInk = false;
+      closeLegalTermModal(true);
       if (currentActiveTab === 'tutores') renderTutores();
 
       if (returnToPaymentModalAfterSign && pet && tutor) {
@@ -22482,13 +22526,82 @@
     window.handleCreateNewContract = function(e) { handleCreatePackageContract(e); };
     window.generatePetAiSummaryInModal = function() { generatePetAiSummary(); };
 
+    // --------------------------------------------------------
+    // GERENCIADOR DE FECHAMENTO INTELIGENTE DE MODAIS (ESC & CLIQUE FORA)
+    // Suporta 'Escape', clique no backdrop e verificação de dados não salvos
+    // --------------------------------------------------------
+    const MODAL_DISMISS_CONFIG = [
+      { id: 'petDetailModal', closeFn: () => closePetDetailModal() },
+      { id: 'newPetModal', closeFn: () => closeNewPetModal() },
+      { id: 'petPaymentModal', closeFn: () => typeof closePetPaymentModal === 'function' && closePetPaymentModal() },
+      { id: 'legalTermModal', closeFn: () => typeof closeLegalTermModal === 'function' && closeLegalTermModal() },
+      { id: 'clientContractSigningModal', closeFn: () => typeof closeClientContractSigningModal === 'function' && closeClientContractSigningModal() },
+      { id: 'tutor360Modal', closeFn: () => typeof closeTutor360Modal === 'function' && closeTutor360Modal() },
+      { id: 'newTransactionModal', closeFn: () => typeof closeNewTransactionModal === 'function' && closeNewTransactionModal() },
+      { id: 'newProductModal', closeFn: () => typeof closeNewProductModal === 'function' && closeNewProductModal() },
+      { id: 'newConsultationModal', closeFn: () => typeof closeNewConsultationModal === 'function' && closeNewConsultationModal() },
+      { id: 'newVaccineModal', closeFn: () => typeof closeNewVaccineModal === 'function' && closeNewVaccineModal() },
+      { id: 'bulkCalculatorModal', closeFn: () => typeof closeBulkCalculatorModal === 'function' && closeBulkCalculatorModal() },
+      { id: 'newContractModal', closeFn: () => typeof closeNewContractModal === 'function' && closeNewContractModal() },
+      { id: 'newInternacaoModal', closeFn: () => typeof closeNewInternacaoModal === 'function' && closeNewInternacaoModal() },
+      { id: 'userAccessModal', closeFn: () => typeof closeUserAccessModal === 'function' && closeUserAccessModal() }
+    ];
+
+    let modalDismissInitialized = false;
+    function initModalDismissHandlers() {
+      if (modalDismissInitialized) return;
+      modalDismissInitialized = true;
+
+      // Registrar clique fora (backdrop overlay) para todos os modais
+      MODAL_DISMISS_CONFIG.forEach(cfg => {
+        const modalEl = document.getElementById(cfg.id);
+        if (!modalEl) return;
+
+        let mousedownOnBackdrop = false;
+
+        modalEl.addEventListener('mousedown', (e) => {
+          // Garante que o clique começou diretamente no fundo escuro
+          mousedownOnBackdrop = (e.target === modalEl);
+        });
+
+        modalEl.addEventListener('click', (e) => {
+          // Fecha se o clique completou diretamente no fundo escuro (fora do card branco)
+          if (e.target === modalEl && mousedownOnBackdrop) {
+            cfg.closeFn();
+          }
+          mousedownOnBackdrop = false;
+        });
+      });
+
+      // Registrar tecla ESC globalmente
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' || e.key === 'Esc') {
+          // Encontra os modais abertos no momento em ordem inversa para fechar o do topo primeiro
+          for (let i = MODAL_DISMISS_CONFIG.length - 1; i >= 0; i--) {
+            const cfg = MODAL_DISMISS_CONFIG[i];
+            const el = document.getElementById(cfg.id);
+            if (el && !el.classList.contains('hidden') && el.style.display !== 'none') {
+              e.preventDefault();
+              cfg.closeFn();
+              break;
+            }
+          }
+        }
+      });
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
       updateGlobalBadges();
       renderKanban();
       renderVisaoGeral();
       renderPacotesModule();
       renderNotificationsList();
+      initModalDismissHandlers();
     });
+
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+      initModalDismissHandlers();
+    }
   
 
     // ========================================================
@@ -22947,9 +23060,14 @@
       initContractCanvas(contract.tutorName, contract.status === 'Ativo e Assinado');
     }
 
-    function closeClientContractSigningModal() {
+    function closeClientContractSigningModal(force = false) {
+      if (!force && typeof contractCanvasHasInk !== 'undefined' && contractCanvasHasInk) {
+        const discard = confirm('Existe uma assinatura no contrato que ainda não foi salva.\n\nDeseja realmente descartar e fechar?');
+        if (!discard) return false;
+      }
       document.getElementById('clientContractSigningModal').classList.add('hidden');
       contractSigningTargetId = null;
+      return true;
     }
 
     function initContractCanvas(tutorName, alreadySigned) {
@@ -23067,7 +23185,8 @@
       renderPacotesModule();
       renderTutores();
       renderAgenda();
-      closeClientContractSigningModal();
+      contractCanvasHasInk = false;
+      closeClientContractSigningModal(true);
 
       showToast(`🎉 Contrato assinado! O pet ${pet ? pet.name : contract.petName} foi LIBERADO com sucesso para banhos e atendimentos! Protocolo: ${contract.protocol}`);
     }
