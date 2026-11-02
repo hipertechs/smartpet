@@ -1022,7 +1022,7 @@
                   <i class="fa-solid fa-chevron-left"></i>
                 </button>
                 <span class="px-3 py-1 font-bold text-xs text-slate-800 min-w-[190px] text-center" id="agendaCurrentPeriodText">
-                  Segunda, 21 de Setembro
+                  Segunda-feira, 02 de Novembro de 2026
                 </span>
                 <button onclick="navigateAgendaDate(1)" class="p-1.5 rounded-lg hover:bg-white text-slate-600 text-xs transition" title="Próximo Período">
                   <i class="fa-solid fa-chevron-right"></i>
@@ -1213,7 +1213,7 @@
             <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
               <div class="flex items-center justify-between pb-3 border-b border-slate-100">
                 <div>
-                  <h4 class="font-bold text-sm text-slate-900" id="calendarMonthTitle">Setembro de 2026</h4>
+                  <h4 class="font-bold text-sm text-slate-900" id="calendarMonthTitle">Novembro de 2026</h4>
                   <p class="text-xs text-slate-500">Distribuição mensal de agendamentos e previsão de demanda</p>
                 </div>
                 <div class="flex items-center gap-4 text-xs font-semibold">
@@ -2009,7 +2009,7 @@
                 <div>
                   <h4 class="font-bold text-base text-slate-900 flex items-center gap-2">
                     <i class="fa-solid fa-scale-unbalanced-flip text-brand-600"></i>
-                    <span>Demonstrativo do Resultado do Exercício (DRE Gerencial — Competência Setembro/2026)</span>
+                    <span>Demonstrativo do Resultado do Exercício (DRE Gerencial — Competência Novembro/2026)</span>
                   </h4>
                   <p class="text-xs text-slate-500">Apuração automática de Margem de Contribuição (IMC %), Ponto de Equilíbrio Operacional e Lucro Líquido</p>
                 </div>
@@ -2923,7 +2923,7 @@
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
               <div>
                 <h4 class="font-bold text-sm text-slate-900 flex items-center gap-2">
-                  <i class="fa-solid fa-repeat text-emerald-600"></i> Gestão de Pacotes Recorrentes (Competência Setembro/2026)
+                  <i class="fa-solid fa-repeat text-emerald-600"></i> Gestão de Pacotes Recorrentes (Competência Novembro/2026)
                 </h4>
                 <p class="text-xs text-slate-500">Controle automático de meses com 4 vs 5 banhos, acompanhamento de tosas e hidratações inclusas</p>
               </div>
@@ -7538,7 +7538,7 @@
   "consultations": [
     {
       "id": "c-1",
-      "date": "2026-09-21",
+      "date": "2026-11-02",
       "petName": "Thor",
       "tutorName": "Carlos Eduardo",
       "weight": "34.2",
@@ -14535,7 +14535,7 @@
     {
       "id": "blk-1",
       "staff": "Lucas",
-      "date": "2026-09-21",
+      "date": "2026-11-02",
       "start": "12:00",
       "end": "13:00",
       "reason": "Horário de Almoço"
@@ -14543,7 +14543,7 @@
     {
       "id": "blk-2",
       "staff": "Beatriz",
-      "date": "2026-09-21",
+      "date": "2026-11-02",
       "start": "13:00",
       "end": "14:00",
       "reason": "Horário de Almoço"
@@ -14551,7 +14551,7 @@
     {
       "id": "blk-3",
       "staff": "Carlos",
-      "date": "2026-09-21",
+      "date": "2026-11-02",
       "start": "16:00",
       "end": "17:00",
       "reason": "Manutenção de Lâminas e Tesouras"
@@ -14982,10 +14982,11 @@
             const parsed = JSON.parse(saved);
             this.pets = parsed.pets || DEFAULT_DATA.pets;
             // Garante que cada pet tenha data e atributos de tosa/hidratação/pacote + perfil técnico (RF04/RF05/RF13)
+            const TODAY_ISO = getFormattedDateISO(new Date());
             this.pets.forEach((p, idx) => {
               const def = DEFAULT_DATA.pets.find(dp => dp.id === p.id) || DEFAULT_DATA.pets[idx] || {};
-              if (!p.date) {
-                p.date = def.date || '2026-09-21';
+              if (!p.date || p.date === '2026-09-21') {
+                p.date = TODAY_ISO;
               }
               if (p.hasTosa === undefined) {
                 p.hasTosa = def.hasTosa !== undefined ? def.hasTosa : (p.service ? p.service.toLowerCase().includes('tosa') : false);
@@ -15333,7 +15334,7 @@
     // MÓDULO: AGENDA INTELIGENTE & GESTÃO MULTI-VIEWS
     // --------------------------------------------------------
     let currentAgendaMode = 'kanban';
-    let agendaCurrentDate = new Date(2026, 8, 21); // 21 de Setembro de 2026
+    let agendaCurrentDate = new Date(); // Data do sistema (Hoje)
 
     const KANBAN_COLUMNS = [
       { id: 'agendado', label: 'Agendado', color: 'blue', dot: 'bg-blue-500', badge: 'bg-blue-100 text-blue-800' },
@@ -15402,7 +15403,7 @@
     }
 
     function navigateAgendaToday() {
-      agendaCurrentDate = new Date(2026, 8, 21);
+      agendaCurrentDate = new Date();
       renderAgenda();
     }
 
@@ -15428,6 +15429,11 @@
       } else {
         return `${dayName}, ${dayNum} de ${monthName}`;
       }
+    }
+
+    function getNowDateTimeFormatted() {
+      const d = new Date();
+      return `${getFormattedDateISO(d)} ${d.toTimeString().substring(0, 5)}`;
     }
 
     function getFormattedDateISO(d) {
@@ -15764,8 +15770,8 @@
         // Filtra pets cuja hora bate com a faixa
         const petsInHour = store.pets.filter(p => {
           const petHour = (p.time || '').substring(0, 2);
-          const petDate = p.date || '2026-09-21';
-          return petHour === hourPrefix && (petDate === selectedDateISO || selectedDateISO === '2026-09-21');
+          const petDate = p.date || getFormattedDateISO(new Date());
+          return petHour === hourPrefix && (petDate === selectedDateISO);
         });
 
         const row = document.createElement('div');
@@ -15841,7 +15847,7 @@
         curDay.setDate(start.getDate() + i);
         const curISO = getFormattedDateISO(curDay);
         const dayName = dayNames[i];
-        const isToday = curISO === '2026-09-21';
+        const isToday = curISO === getFormattedDateISO(new Date());
 
         const dayPets = store.pets.filter(p => (p.date === curISO) || (i === 0 && !p.date));
         const isSaturday = i === 5;
@@ -15910,7 +15916,7 @@
       }
     }
 
-    // 5. VISÃO MENSAL (CALENDÁRIO DE SETEMBRO DE 2026)
+    // 5. VISÃO MENSAL DINÂMICA (CALENDÁRIO INTELIGENTE)
     function renderAgendaMensal() {
       const grid = document.getElementById('agendaMonthlyGrid');
       if (!grid) return;
@@ -15918,7 +15924,6 @@
       grid.innerHTML = '';
       const daysOfWeek = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
-      // Cabeçalho dos dias
       daysOfWeek.forEach(dow => {
         const header = document.createElement('div');
         header.className = 'text-center font-bold text-xs text-slate-500 uppercase py-2 bg-slate-100 rounded-lg';
@@ -15926,30 +15931,41 @@
         grid.appendChild(header);
       });
 
-      // Em Setembro de 2026: 01 de setembro começa numa Terça-feira (índice 2: Dom=0, Seg=1, Ter=2)
-      // Portanto, 2 células em branco iniciais
-      for (let pad = 0; pad < 2; pad++) {
+      const year = agendaCurrentDate.getFullYear();
+      const month = agendaCurrentDate.getMonth();
+      const titleElem = document.getElementById('calendarMonthTitle');
+      const monthsNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+      if (titleElem) {
+        titleElem.textContent = `${monthsNames[month]} de ${year}`;
+      }
+
+      // Primeiro dia da semana do mês
+      const firstDayOfMonth = new Date(year, month, 1).getDay();
+      for (let pad = 0; pad < firstDayOfMonth; pad++) {
         const blank = document.createElement('div');
         blank.className = 'min-h-[90px] rounded-xl bg-slate-50/50 border border-slate-100 p-2 opacity-30';
         grid.appendChild(blank);
       }
 
-      // 30 dias de Setembro
-      for (let day = 1; day <= 30; day++) {
-        const dayStr = String(day).padStart(2, '0');
-        const curISO = `2026-09-${dayStr}`;
-        const isToday = day === 21;
+      const totalDays = new Date(year, month + 1, 0).getDate();
+      const today = new Date();
+      const isCurrentMonthYear = today.getFullYear() === year && today.getMonth() === month;
 
-        // Filtra pets marcados para este dia
-        const dayPets = store.pets.filter(p => (p.date === curISO) || (isToday && (!p.date || p.date === '2026-09-21')));
+      for (let day = 1; day <= totalDays; day++) {
+        const dayStr = String(day).padStart(2, '0');
+        const monthStr = String(month + 1).padStart(2, '0');
+        const curISO = `${year}-${monthStr}-${dayStr}`;
+        const isToday = isCurrentMonthYear && today.getDate() === day;
+
+        const dayPets = store.pets.filter(p => (p.date === curISO) || (isToday && (!p.date || p.date === curISO)));
         const totalBilled = dayPets.reduce((acc, p) => acc + (p.price || 85), 0);
 
         const cell = document.createElement('div');
         cell.className = `min-h-[90px] rounded-xl p-2.5 border transition cursor-pointer flex flex-col justify-between hover:shadow-md ${isToday ? 'bg-teal-50/80 border-brand-500 shadow-sm' : 'bg-white border-slate-200 hover:border-brand-300'}`;
         cell.onclick = () => {
-          agendaCurrentDate = new Date(2026, 8, day);
+          agendaCurrentDate = new Date(year, month, day);
           setAgendaViewMode('dia');
-          showToast(`Exibindo agendamentos do dia ${day} de Setembro`);
+          showToast(`Exibindo agendamentos do dia ${day} de ${monthsNames[month]}`);
         };
 
         let badgeHtml = '';
@@ -17124,7 +17140,7 @@
       }
 
       const now = new Date();
-      const dateStr = '2026-09-21 ' + now.toTimeString().substring(0, 5);
+      const dateStr = getNowDateTimeFormatted();
       store.transactions.unshift({
         id: `tx-${Date.now()}`,
         date: dateStr,
@@ -18160,7 +18176,7 @@
     // A mesma lógica pode ser portada para o backend (ver arquitetura).
     // --------------------------------------------------------
     const BOT_NAME = 'Sofi';
-    const BOT_TODAY = new Date(2026, 8, 21); // "Hoje" do protótipo (mesma data da agenda)
+    const BOT_TODAY = new Date(); // Data atual do sistema
     const BOT_SLOT_CAPACITY = 2;             // pets simultâneos por horário
     const BOT_SLOTS = [];
     for (let h = 8; h <= 17; h++) {
@@ -20389,7 +20405,7 @@
       c.usedHydra = 0;
       store.transactions.unshift({
         id: `tx-${Date.now()}`,
-        date: '2026-09-21 15:00',
+        date: getNowDateTimeFormatted(),
         description: `Renovação Pacote ${c.planName} - ${c.petName} (${c.tutorName})`,
         category: 'Estética',
         amount: c.price,
@@ -20590,7 +20606,7 @@
       const r = store.receivables[idx];
       store.transactions.unshift({
         id: `tx-${Date.now()}`,
-        date: '2026-09-21 16:00',
+        date: getNowDateTimeFormatted(),
         description: `Recebimento Título - ${r.tutorName} (${r.origin})`,
         category: 'Crediário',
         amount: r.originalAmount * (1 + (r.interestPct || 0) / 100),
@@ -20640,7 +20656,7 @@
       p.status = 'Pago';
       store.transactions.unshift({
         id: `tx-${Date.now()}`,
-        date: '2026-09-21 16:10',
+        date: getNowDateTimeFormatted(),
         description: ` Baixa Contas a Pagar: ${p.description}`,
         category: p.category,
         amount: p.amount,
@@ -20786,7 +20802,7 @@
       q.status = 'Convertido em Venda';
       store.transactions.unshift({
         id: `tx-${Date.now()}`,
-        date: '2026-09-21 16:30',
+        date: getNowDateTimeFormatted(),
         description: `Conversão ${q.id} (${q.tutorName}) — ${q.itemsText}`,
         category: 'Loja',
         amount: q.total,
