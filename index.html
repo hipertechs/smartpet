@@ -4212,6 +4212,18 @@
             <span class="font-mono font-bold text-slate-700" id="detailModalTimestamps">Entrada: 09:02 • Previsão: 11:00</span>
           </div>
           <div class="flex justify-between items-center pt-1.5 border-t border-slate-200/80">
+            <span class="text-slate-500 font-semibold">Situação na Esteira:</span>
+            <select id="detailModalStatusSelect" onchange="handleModalStatusSelectChange(this.value)" class="text-xs font-bold rounded-lg px-2.5 py-1 border border-slate-300 bg-white cursor-pointer shadow-xs focus:ring-2 focus:ring-brand-500">
+              <option value="agendado">📅 Agendado</option>
+              <option value="aguardando">📥 Check-in (Aguardando)</option>
+              <option value="banho">🛁 No Banho</option>
+              <option value="secagem">💨 Secagem</option>
+              <option value="tosa">✂️ Na Tosa</option>
+              <option value="pronto">✅ Pronto</option>
+              <option value="entregue">🏠 Check-out (Entregue)</option>
+            </select>
+          </div>
+          <div class="flex justify-between items-center pt-1.5 border-t border-slate-200/80">
             <span class="text-slate-500">Situação Financeira:</span>
             <span id="detailModalPaymentBadge" class="font-bold text-[10px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">Em Aberto</span>
           </div>
@@ -4350,17 +4362,178 @@
         </button>
         
         <div class="flex items-center gap-2">
+          <button type="button" onclick="stepBackPetFromModal()" 
+                  class="py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition flex items-center justify-center gap-1.5" title="Voltar para a etapa anterior (Desfazer)">
+            <i class="fa-solid fa-backward-step"></i>
+            <span>Voltar</span>
+          </button>
+
           <button id="detailAdvanceStatusBtn" onclick="advancePetStatusFromModal()" 
                   class="flex-1 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs transition flex items-center justify-center gap-2">
             <i class="fa-solid fa-forward-step"></i>
             <span>Avançar Etapa</span>
           </button>
+
+          <button type="button" onclick="openReschedulePetModal(store.selectedPetIdForModal)"
+                  class="py-2.5 px-3 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 font-bold text-xs transition flex items-center justify-center gap-1.5" title="Reagendar horário ou data">
+            <i class="fa-solid fa-calendar-days"></i>
+            <span>Reagendar</span>
+          </button>
+          
           <button onclick="deletePetFromModal()" 
-                  class="px-4 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs transition">
+                  class="px-3.5 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs transition" title="Excluir da Esteira">
             <i class="fa-solid fa-trash-can"></i>
           </button>
         </div>
       </div>
+    </div>
+  </div>
+
+
+  <!-- ======================================================= -->
+  <!-- MODAL: REAGENDAR PET (HORÁRIO, DATA E ETAPA)           -->
+  <!-- ======================================================= -->
+  <div id="reschedulePetModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-lg">
+            <i class="fa-solid fa-calendar-days"></i>
+          </div>
+          <div>
+            <h3 class="font-extrabold text-base text-slate-900">Reagendar Atendimento</h3>
+            <p class="text-xs text-slate-500" id="rescheduleModalPetSubtitle">Defina o novo horário ou data para o pet</p>
+          </div>
+        </div>
+        <button onclick="closeReschedulePetModal()" class="text-slate-400 hover:text-slate-600 p-1">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <form id="reschedulePetForm" onsubmit="handleConfirmReschedule(event)" class="mt-4 space-y-3.5 text-xs">
+        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+          <div>
+            <span class="font-bold text-slate-900 block" id="reschedulePetNameDisplay">Thor (Golden Retriever)</span>
+            <span class="text-slate-500 text-[11px]" id="reschedulePetTutorDisplay">Tutor: Carlos Eduardo • (11) 98765-4321</span>
+          </div>
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800" id="reschedulePetCurrentStatusBadge">Secagem</span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Nova Data <span class="text-rose-600">*</span></label>
+            <input type="date" id="rescheduleNewDate" required class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold text-slate-800 focus:ring-2 focus:ring-brand-500 focus:outline-none" />
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Novo Horário <span class="text-rose-600">*</span></label>
+            <input type="time" id="rescheduleNewTime" required class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold text-slate-800 focus:ring-2 focus:ring-brand-500 focus:outline-none" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Profissional Responsável</label>
+          <select id="rescheduleNewStaff" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white font-medium text-slate-800 focus:ring-2 focus:ring-brand-500 focus:outline-none">
+            <option value="Lorrana">Lorrana (Tosadora / Esteticista)</option>
+            <option value="Lucas">Lucas (Banhista)</option>
+            <option value="Mariana">Mariana (Banhista)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Definir Etapa Inicial após Reagendar</label>
+          <select id="rescheduleNewStatus" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white font-bold text-brand-700 focus:ring-2 focus:ring-brand-500 focus:outline-none">
+            <option value="agendado" selected>📅 Agendado (Aguardando Chegada no Novo Horário)</option>
+            <option value="aguardando">📥 Check-in Realizado (Pet já está no pet shop)</option>
+            <option value="banho">🛁 Já encaminhar para o Banho</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Motivo do Reagendamento (Opcional)</label>
+          <input type="text" id="rescheduleReason" placeholder="Ex: Tutor solicitou alteração de horário" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-slate-800 focus:ring-2 focus:ring-brand-500 focus:outline-none" />
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+          <button type="button" onclick="closeReschedulePetModal()" class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold transition">
+            Cancelar
+          </button>
+          <button type="submit" class="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold shadow-md transition flex items-center gap-2">
+            <i class="fa-solid fa-calendar-check"></i>
+            <span>Confirmar Reagendamento</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- POPOVER GLOBAL: MENU DE 3 PONTINHOS DO PET (CHECK-IN, CHECK-OUT, ETAPAS, REAGENDAR) -->
+  <div id="petQuickActionGlobalPopover" class="hidden fixed z-50 bg-white rounded-2xl shadow-2xl border border-slate-200 w-64 overflow-hidden text-xs py-1 animate-fade-in">
+    <div class="px-3.5 py-2.5 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+      <div class="truncate pr-2">
+        <span class="font-bold text-slate-900 block truncate" id="popoverPetName">Pet</span>
+        <span class="text-[10px] text-slate-500 block truncate" id="popoverPetInfo">Informações</span>
+      </div>
+      <span id="popoverPetStatusBadge" class="text-[9px] font-black px-2 py-0.5 rounded-full bg-slate-200 text-slate-800 flex-shrink-0">STATUS</span>
+    </div>
+
+    <div class="py-1">
+      <div class="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+        Etapa Operacional (Esteira)
+      </div>
+      <button type="button" onclick="changePetStatusFromPopover('aguardando')" class="w-full px-3.5 py-1.5 text-left text-xs font-semibold hover:bg-teal-50 flex items-center gap-2 text-slate-700">
+        <i class="fa-solid fa-hourglass-start text-amber-500 w-4 text-center"></i>
+        <span>Fazer Check-in (Chegou)</span>
+      </button>
+      <button type="button" onclick="changePetStatusFromPopover('banho')" class="w-full px-3.5 py-1.5 text-left text-xs font-semibold hover:bg-teal-50 flex items-center gap-2 text-slate-700">
+        <i class="fa-solid fa-shower text-cyan-500 w-4 text-center"></i>
+        <span>Mover para o Banho</span>
+      </button>
+      <button type="button" onclick="changePetStatusFromPopover('secagem')" class="w-full px-3.5 py-1.5 text-left text-xs font-semibold hover:bg-teal-50 flex items-center gap-2 text-slate-700">
+        <i class="fa-solid fa-wind text-orange-500 w-4 text-center"></i>
+        <span>Mover para Secagem</span>
+      </button>
+      <button type="button" onclick="changePetStatusFromPopover('tosa')" class="w-full px-3.5 py-1.5 text-left text-xs font-semibold hover:bg-teal-50 flex items-center gap-2 text-slate-700">
+        <i class="fa-solid fa-scissors text-purple-500 w-4 text-center"></i>
+        <span>Mover para Tosa</span>
+      </button>
+      <button type="button" onclick="changePetStatusFromPopover('pronto')" class="w-full px-3.5 py-1.5 text-left text-xs font-semibold hover:bg-teal-50 flex items-center gap-2 text-slate-700">
+        <i class="fa-solid fa-circle-check text-emerald-500 w-4 text-center"></i>
+        <span>Marcar como Pronto</span>
+      </button>
+      <button type="button" onclick="changePetStatusFromPopover('entregue')" class="w-full px-3.5 py-1.5 text-left text-xs font-semibold hover:bg-teal-50 flex items-center gap-2 text-slate-700">
+        <i class="fa-solid fa-house-chimney-user text-slate-600 w-4 text-center"></i>
+        <span>Fazer Check-out (Entregue)</span>
+      </button>
+      <button type="button" onclick="stepBackPetFromPopover()" class="w-full px-3.5 py-1.5 text-left text-xs font-bold hover:bg-slate-100 text-brand-700 flex items-center gap-2 border-t border-slate-100 mt-1 pt-1.5">
+        <i class="fa-solid fa-backward-step w-4 text-center"></i>
+        <span>Voltar Etapa Anterior</span>
+      </button>
+    </div>
+
+    <div class="py-1 border-t border-slate-100">
+      <div class="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+        Gestão & Atendimento
+      </div>
+      <button type="button" onclick="openRescheduleFromPopover()" class="w-full px-3.5 py-1.5 text-left text-xs font-semibold hover:bg-amber-50 text-amber-900 flex items-center gap-2">
+        <i class="fa-solid fa-calendar-days text-amber-600 w-4 text-center"></i>
+        <span>Reagendar Horário / Data</span>
+      </button>
+      <button type="button" onclick="openPaymentFromPopover()" class="w-full px-3.5 py-1.5 text-left text-xs font-semibold hover:bg-emerald-50 text-emerald-900 flex items-center gap-2">
+        <i class="fa-solid fa-cash-register text-emerald-600 w-4 text-center"></i>
+        <span>Receber Pagamento</span>
+      </button>
+      <button type="button" onclick="sendWhatsAppFromPopover()" class="w-full px-3.5 py-1.5 text-left text-xs font-semibold hover:bg-teal-50 text-teal-900 flex items-center gap-2">
+        <i class="fa-brands fa-whatsapp text-emerald-600 w-4 text-center"></i>
+        <span>Avisar no WhatsApp</span>
+      </button>
+      <button type="button" onclick="openDetailFromPopover()" class="w-full px-3.5 py-1.5 text-left text-xs font-semibold hover:bg-slate-100 text-slate-800 flex items-center gap-2">
+        <i class="fa-solid fa-id-card text-slate-600 w-4 text-center"></i>
+        <span>Abrir Prontuário 360º</span>
+      </button>
+      <button type="button" onclick="deletePetFromPopover()" class="w-full px-3.5 py-1.5 text-left text-xs font-semibold hover:bg-rose-50 text-rose-600 flex items-center gap-2 border-t border-slate-100 mt-1">
+        <i class="fa-solid fa-trash-can text-rose-500 w-4 text-center"></i>
+        <span>Excluir da Esteira</span>
+      </button>
     </div>
   </div>
 
@@ -15559,23 +15732,83 @@
 
     const KANBAN_COLUMNS = [
       { id: 'agendado', label: 'Agendado', color: 'blue', dot: 'bg-blue-500', badge: 'bg-blue-100 text-blue-800' },
-      { id: 'aguardando', label: 'Aguardando', color: 'amber', dot: 'bg-amber-500', badge: 'bg-amber-100 text-amber-800' },
+      { id: 'aguardando', label: 'Check-in (Aguardando)', color: 'amber', dot: 'bg-amber-500', badge: 'bg-amber-100 text-amber-800' },
       { id: 'banho', label: 'No Banho', color: 'cyan', dot: 'bg-cyan-500', badge: 'bg-cyan-100 text-cyan-800' },
       { id: 'secagem', label: 'Secagem', color: 'orange', dot: 'bg-orange-500', badge: 'bg-orange-100 text-orange-800' },
       { id: 'tosa', label: 'Na Tosa', color: 'purple', dot: 'bg-purple-500', badge: 'bg-purple-100 text-purple-800', note: 'Apenas c/ tosa' },
-      { id: 'pronto', label: 'Pronto', color: 'emerald', dot: 'bg-emerald-500', badge: 'bg-emerald-100 text-emerald-800' },
+      { id: 'pronto', label: 'Pronto (Aguard. Retirada)', color: 'emerald', dot: 'bg-emerald-500', badge: 'bg-emerald-100 text-emerald-800' },
+      { id: 'entregue', label: 'Check-out (Entregue)', color: 'slate', dot: 'bg-slate-500', badge: 'bg-slate-200 text-slate-800' }
     ];
+
+    const PET_STATUS_ORDER = ['agendado', 'aguardando', 'banho', 'secagem', 'tosa', 'pronto', 'entregue'];
+
+    function isStatusBackwards(oldStatus, newStatus) {
+      const oldIdx = PET_STATUS_ORDER.indexOf(oldStatus || 'agendado');
+      const newIdx = PET_STATUS_ORDER.indexOf(newStatus || 'agendado');
+      if (oldIdx === -1 || newIdx === -1) return false;
+      return newIdx < oldIdx;
+    }
+
+    function getStatusBadgeClasses(status) {
+      switch (status) {
+        case 'agendado':
+          return 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100';
+        case 'aguardando':
+          return 'bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100';
+        case 'banho':
+          return 'bg-cyan-50 text-cyan-800 border-cyan-300 hover:bg-cyan-100';
+        case 'secagem':
+          return 'bg-orange-50 text-orange-800 border-orange-300 hover:bg-orange-100';
+        case 'tosa':
+          return 'bg-purple-50 text-purple-800 border-purple-300 hover:bg-purple-100';
+        case 'pronto':
+          return 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100';
+        case 'entregue':
+          return 'bg-slate-100 text-slate-800 border-slate-300 hover:bg-slate-200';
+        default:
+          return 'bg-slate-50 text-slate-700 border-slate-200';
+      }
+    }
+
+    function getStatusLabel(status) {
+      switch (status) {
+        case 'agendado': return '📅 Agendado';
+        case 'aguardando': return '📥 Check-in (Chegou)';
+        case 'banho': return '🛁 No Banho';
+        case 'secagem': return '💨 Secagem';
+        case 'tosa': return '✂️ Na Tosa';
+        case 'pronto': return '✅ Pronto';
+        case 'entregue': return '🏠 Check-out (Entregue)';
+        default: return status || 'Agendado';
+      }
+    }
 
     function getNextPetStatus(pet) {
       if (!pet) return null;
-      if (pet.status === 'agendado') return 'aguardando';
-      if (pet.status === 'aguardando') return 'banho';
-      if (pet.status === 'banho') return 'secagem';
-      if (pet.status === 'secagem') {
+      const current = pet.status || 'agendado';
+      if (current === 'agendado') return 'aguardando';
+      if (current === 'aguardando') return 'banho';
+      if (current === 'banho') return 'secagem';
+      if (current === 'secagem') {
         // Regra operacional: se o pet tem tosa agendada, avança para tosa; se NÃO tem tosa, pula direto para pronto!
         return pet.hasTosa ? 'tosa' : 'pronto';
       }
-      if (pet.status === 'tosa') return 'pronto';
+      if (current === 'tosa') return 'pronto';
+      if (current === 'pronto') return 'entregue';
+      return null;
+    }
+
+    function getPreviousPetStatus(pet) {
+      if (!pet) return null;
+      const current = pet.status || 'agendado';
+      if (current === 'entregue') return 'pronto';
+      if (current === 'pronto') {
+        return pet.hasTosa ? 'tosa' : 'secagem';
+      }
+      if (current === 'tosa') return 'secagem';
+      if (current === 'secagem') return 'banho';
+      if (current === 'banho') return 'aguardando';
+      if (current === 'aguardando') return 'agendado';
       return null;
     }
 
@@ -15957,11 +16190,12 @@
 
         const statusPills = {
           agendado: '<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800">Agendado</span>',
-          aguardando: '<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">Aguardando</span>',
+          aguardando: '<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">Check-in</span>',
           banho: '<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-cyan-100 text-cyan-800">No Banho</span>',
           secagem: '<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-orange-100 text-orange-800">Secagem</span>',
           tosa: '<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800">Na Tosa</span>',
-          pronto: '<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Pronto</span>'
+          pronto: '<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Pronto</span>',
+          entregue: '<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-200 text-slate-800">Check-out</span>'
         };
 
         const isPetBlocked = !!(pet.isBlockedByContract || pet.contractStatus === 'Aguardando Assinatura');
@@ -16009,19 +16243,39 @@
           <td class="p-3">
             <span class="font-medium text-slate-700 bg-slate-100 px-2 py-0.5 rounded-lg">${pet.staff}</span>
           </td>
-          <td class="p-3">${statusPills[pet.status] || statusPills.agendado}</td>
+          <td class="p-3">
+            <div class="relative inline-block">
+              <select onchange="handlePetStatusChangeManual('${pet.id}', this.value)" 
+                      class="text-[11px] font-extrabold rounded-lg px-2.5 py-1.5 border shadow-2xs cursor-pointer transition focus:ring-2 focus:ring-brand-500 ${getStatusBadgeClasses(pet.status)}"
+                      title="Alterar etapa manualmente (Check-in, Banho, Secagem, Tosa, Pronto, Check-out)">
+                <option value="agendado" ${pet.status === 'agendado' ? 'selected' : ''}>📅 Agendado</option>
+                <option value="aguardando" ${pet.status === 'aguardando' ? 'selected' : ''}>📥 Check-in (Chegou)</option>
+                <option value="banho" ${pet.status === 'banho' ? 'selected' : ''}>🛁 No Banho</option>
+                <option value="secagem" ${pet.status === 'secagem' ? 'selected' : ''}>💨 Secagem</option>
+                <option value="tosa" ${pet.status === 'tosa' ? 'selected' : ''}>✂️ Na Tosa</option>
+                <option value="pronto" ${pet.status === 'pronto' ? 'selected' : ''}>✅ Pronto</option>
+                <option value="entregue" ${pet.status === 'entregue' ? 'selected' : ''}>🏠 Check-out (Entregue)</option>
+              </select>
+            </div>
+          </td>
           <td class="p-3 text-right">
-            <div class="flex items-center justify-end gap-1.5">
-              <button onclick="openPetPaymentModal('${pet.id}', true)" class="p-1.5 rounded-lg ${pet.paymentStatus === 'pendente' ? 'bg-amber-100 hover:bg-amber-200 text-amber-800' : 'bg-slate-100 hover:bg-slate-200 text-slate-600'} transition" title="Receber / Baixar Pagamento">
-                <i class="fa-solid fa-cash-register text-xs"></i>
+            <div class="flex items-center justify-end gap-1">
+              <button onclick="quickStepBackPet('${pet.id}')" class="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition" title="Voltar Etapa (Desfazer avanço acidental)">
+                <i class="fa-solid fa-backward-step text-xs"></i>
               </button>
               <button onclick="quickAdvancePet('${pet.id}')" class="p-1.5 rounded-lg ${isPetBlocked ? 'bg-rose-100 hover:bg-rose-200 text-rose-800' : (pet.status === 'secagem' && !pet.hasTosa ? 'bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold' : 'bg-teal-50 hover:bg-teal-100 text-teal-700')} transition" title="${advanceTitle}">
                 <i class="fa-solid ${isPetBlocked ? 'fa-lock' : 'fa-forward-step'} text-xs"></i>
               </button>
+              <button onclick="togglePetActionMenu('${pet.id}', event)" class="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition" title="Mais Opções / Menu 3 Pontinhos (Check-in, Check-out, Reagendar, etc.)">
+                <i class="fa-solid fa-ellipsis-vertical text-xs"></i>
+              </button>
+              <button onclick="openPetPaymentModal('${pet.id}', true)" class="p-1.5 rounded-lg ${pet.paymentStatus === 'pendente' ? 'bg-amber-100 hover:bg-amber-200 text-amber-800' : 'bg-slate-100 hover:bg-slate-200 text-slate-600'} transition" title="Receber / Baixar Pagamento">
+                <i class="fa-solid fa-cash-register text-xs"></i>
+              </button>
               <button onclick="quickSendWhatsApp('${pet.id}')" class="p-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition" title="Avisar no WhatsApp">
                 <i class="fa-brands fa-whatsapp text-xs"></i>
               </button>
-              <button onclick="openPetDetailModal('${pet.id}')" class="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition" title="Ver Ficha">
+              <button onclick="openPetDetailModal('${pet.id}')" class="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition" title="Ver Prontuário 360º">
                 <i class="fa-solid fa-eye text-xs"></i>
               </button>
               <button onclick="deletePetById('${pet.id}')" class="p-1.5 rounded-lg hover:bg-rose-50 text-slate-400 hover:text-rose-600 transition" title="Excluir">
@@ -16274,7 +16528,94 @@
       }
     }
 
-    // Ações Rápidas de Pets em Qualquer Modo
+    // --------------------------------------------------------
+    // GESTÃO AVANÇADA DE ETAPAS E TRANSIÇÕES DE PETS
+    // Atende à solicitação: Seletor manual, Check-in/Check-out, Voltar Etapa e Reagendamento
+    // --------------------------------------------------------
+    function handlePetStatusChangeManual(petId, newStatus) {
+      const pet = store.pets.find(p => p.id === petId);
+      if (!pet) return;
+
+      const oldStatus = pet.status || 'agendado';
+      if (oldStatus === newStatus) return;
+
+      const isGoingBack = isStatusBackwards(oldStatus, newStatus);
+
+      // Se estiver AVANÇANDO para etapas produtivas/finais, verificar travas de negócio
+      if (!isGoingBack) {
+        // 1. Verificação de contrato (se for avançar além de agendado)
+        if (newStatus !== 'agendado' && (pet.isBlockedByContract || pet.contractStatus === 'Aguardando Assinatura')) {
+          showToast(`🔒 Pet Bloqueado! ${pet.name} só está liberado para banho/procedimentos após a assinatura do contrato.`);
+          if (pet.contractId) openClientContractSigningModal(pet.contractId);
+          renderAgenda();
+          return;
+        }
+
+        // 2. Verificação de financeiro (se for marcar como pronto ou entregue)
+        if ((newStatus === 'pronto' || newStatus === 'entregue') && (!pet.paymentStatus || pet.paymentStatus === 'pendente')) {
+          showToast(`🔒 Financeiro em aberto! Realize a baixa do pagamento para liberar ${pet.name}.`);
+          openPetPaymentModal(pet.id, true);
+          renderAgenda();
+          return;
+        }
+      }
+
+      // Registrar horários operacionais
+      const nowTime = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      if (newStatus === 'aguardando' && !pet.checkinTime) {
+        pet.checkinTime = nowTime;
+      }
+      if (newStatus === 'entregue') {
+        pet.checkoutTime = nowTime;
+      }
+
+      pet.status = newStatus;
+      store.save();
+      renderAgenda();
+
+      // Sincronizar select no modal de detalhes caso esteja aberto
+      const modalSelect = document.getElementById('detailModalStatusSelect');
+      if (modalSelect && store.selectedPetIdForModal === pet.id) {
+        modalSelect.value = newStatus;
+      }
+
+      if (isGoingBack) {
+        showToast(`⏮️ ${pet.name}: etapa retornada para ${getStatusLabel(newStatus)}.`);
+      } else if (newStatus === 'aguardando') {
+        showToast(`📥 Check-in realizado com sucesso! ${pet.name} aguardando início.`);
+      } else if (newStatus === 'entregue') {
+        showToast(`🏠 Check-out concluído! ${pet.name} entregue ao tutor.`);
+      } else if (newStatus === 'pronto') {
+        showToast(`✅ ${pet.name} marcado como PRONTO! Notificação liberada.`);
+      } else {
+        showToast(`${pet.name} movido para ${getStatusLabel(newStatus)}!`);
+      }
+    }
+
+    function quickStepBackPet(petId) {
+      const pet = store.pets.find(p => p.id === petId);
+      if (!pet) return;
+
+      const prevStatus = getPreviousPetStatus(pet);
+      if (!prevStatus) {
+        showToast(`ℹ️ ${pet.name} já está na etapa inicial (${getStatusLabel(pet.status)}).`);
+        return;
+      }
+
+      handlePetStatusChangeManual(pet.id, prevStatus);
+    }
+
+    function stepBackPetFromModal() {
+      if (!store.selectedPetIdForModal) return;
+      quickStepBackPet(store.selectedPetIdForModal);
+    }
+
+    function handleModalStatusSelectChange(newStatus) {
+      if (!store.selectedPetIdForModal) return;
+      handlePetStatusChangeManual(store.selectedPetIdForModal, newStatus);
+    }
+
+    // Ações Rápidas de Pets em Qualquer Modo (Avanço sequencial inteligente)
     function quickAdvancePet(petId) {
       const pet = store.pets.find(p => p.id === petId);
       if (!pet) return;
@@ -16288,35 +16629,222 @@
 
       const nextStatus = getNextPetStatus(pet);
       if (nextStatus) {
-        // REGRA OBRIGATÓRIA: Não é possível finalizar (ir para PRONTO) se o financeiro estiver em aberto!
-        if (nextStatus === 'pronto' && (!pet.paymentStatus || pet.paymentStatus === 'pendente')) {
-          showToast(`🔒 Financeiro em aberto! Quite o pagamento para finalizar ${pet.name}.`);
+        // REGRA OBRIGATÓRIA: Não é possível finalizar (ir para PRONTO ou ENTREGUE) se o financeiro estiver em aberto!
+        if ((nextStatus === 'pronto' || nextStatus === 'entregue') && (!pet.paymentStatus || pet.paymentStatus === 'pendente')) {
+          showToast(`🔒 Financeiro em aberto! Quite o pagamento para avançar ${pet.name}.`);
           openPetPaymentModal(pet.id, true);
           return;
         }
 
-        const fromStatus = pet.status;
-        pet.status = nextStatus;
-        store.save();
-        renderAgenda();
-        if (fromStatus === 'secagem' && nextStatus === 'pronto') {
-          showToast(`⚡ ${pet.name} (Somente Banho): pulou a Tosa e foi direto para PRONTO!`);
-        } else {
-          showToast(`${pet.name} avançou para ${nextStatus.toUpperCase()}!`);
-        }
-        if (nextStatus === 'pronto') {
-          setTimeout(() => {
-            showToast(`Pet ${pet.name} concluído! Notificação pronta para o tutor.`);
-          }, 800);
-        }
+        handlePetStatusChangeManual(pet.id, nextStatus);
       } else {
         if (!pet.paymentStatus || pet.paymentStatus === 'pendente') {
           showToast(`🔒 ${pet.name} possui valor em aberto! Realize a baixa financeira.`);
           openPetPaymentModal(pet.id, true);
           return;
         }
-        showToast(`${pet.name} já está concluído e pago (${pet.paymentMethod || 'PIX'})!`);
+        showToast(`${pet.name} já concluiu todas as etapas (Check-out Realizado)!`);
       }
+    }
+
+    // --------------------------------------------------------
+    // MENU DE 3 PONTINHOS (POPOVER FLUTUANTE DE AÇÕES RÁPIDAS)
+    // --------------------------------------------------------
+    let activePopoverPetId = null;
+
+    function togglePetActionMenu(petId, event) {
+      if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+      }
+
+      const popover = document.getElementById('petQuickActionGlobalPopover');
+      if (!popover) return;
+
+      // Se já está aberto para o mesmo pet, fecha
+      if (!popover.classList.contains('hidden') && activePopoverPetId === petId) {
+        closePetActionMenu();
+        return;
+      }
+
+      const pet = store.pets.find(p => p.id === petId);
+      if (!pet) return;
+
+      activePopoverPetId = petId;
+
+      // Atualiza cabeçalho do popover
+      const petNameEl = document.getElementById('popoverPetName');
+      const petInfoEl = document.getElementById('popoverPetInfo');
+      const petStatusEl = document.getElementById('popoverPetStatusBadge');
+
+      if (petNameEl) petNameEl.textContent = pet.name;
+      if (petInfoEl) petInfoEl.textContent = `${pet.breed} • ${pet.time} • ${pet.staff}`;
+      if (petStatusEl) {
+        petStatusEl.textContent = (pet.status || 'agendado').toUpperCase();
+        petStatusEl.className = `text-[9px] font-black px-2 py-0.5 rounded-full flex-shrink-0 ${getStatusBadgeClasses(pet.status)}`;
+      }
+
+      // Posicionamento flutuante
+      popover.classList.remove('hidden');
+
+      if (event && event.currentTarget) {
+        const rect = event.currentTarget.getBoundingClientRect();
+        const popoverWidth = 260;
+        const popoverHeight = 360;
+
+        let top = rect.bottom + 6;
+        let left = rect.right - popoverWidth;
+
+        if (top + popoverHeight > window.innerHeight) {
+          top = Math.max(10, rect.top - popoverHeight - 6);
+        }
+        if (left < 10) {
+          left = 10;
+        }
+
+        popover.style.top = `${top}px`;
+        popover.style.left = `${left}px`;
+      }
+    }
+
+    function closePetActionMenu() {
+      const popover = document.getElementById('petQuickActionGlobalPopover');
+      if (popover) popover.classList.add('hidden');
+      activePopoverPetId = null;
+    }
+
+    function changePetStatusFromPopover(newStatus) {
+      if (!activePopoverPetId) return;
+      const pid = activePopoverPetId;
+      closePetActionMenu();
+      handlePetStatusChangeManual(pid, newStatus);
+    }
+
+    function stepBackPetFromPopover() {
+      if (!activePopoverPetId) return;
+      const pid = activePopoverPetId;
+      closePetActionMenu();
+      quickStepBackPet(pid);
+    }
+
+    function openRescheduleFromPopover() {
+      if (!activePopoverPetId) return;
+      const pid = activePopoverPetId;
+      closePetActionMenu();
+      openReschedulePetModal(pid);
+    }
+
+    function openPaymentFromPopover() {
+      if (!activePopoverPetId) return;
+      const pid = activePopoverPetId;
+      closePetActionMenu();
+      openPetPaymentModal(pid, true);
+    }
+
+    function sendWhatsAppFromPopover() {
+      if (!activePopoverPetId) return;
+      const pid = activePopoverPetId;
+      closePetActionMenu();
+      quickSendWhatsApp(pid);
+    }
+
+    function openDetailFromPopover() {
+      if (!activePopoverPetId) return;
+      const pid = activePopoverPetId;
+      closePetActionMenu();
+      openPetDetailModal(pid);
+    }
+
+    function deletePetFromPopover() {
+      if (!activePopoverPetId) return;
+      const pid = activePopoverPetId;
+      closePetActionMenu();
+      deletePetById(pid);
+    }
+
+    // --------------------------------------------------------
+    // MODAL DE REAGENDAMENTO DE PET (DATA, HORA, PROFISSIONAL, ETAPA)
+    // --------------------------------------------------------
+    let currentReschedulePetId = null;
+
+    function openReschedulePetModal(petId) {
+      const pet = store.pets.find(p => p.id === petId);
+      if (!pet) return;
+
+      currentReschedulePetId = petId;
+      const subtitle = document.getElementById('rescheduleModalPetSubtitle');
+      if (subtitle) subtitle.textContent = `${pet.name} • Tutor: ${pet.tutor || 'Não informado'}`;
+
+      const currentSummary = document.getElementById('rescheduleCurrentSummary');
+      if (currentSummary) {
+        currentSummary.textContent = `${pet.time || '--:--'} • ${pet.date || 'Hoje'} • ${pet.staff || 'Qualquer'} (${getStatusLabel(pet.status)})`;
+      }
+
+      const dateInput = document.getElementById('rescheduleDateInput');
+      if (dateInput) {
+        dateInput.value = pet.date || getFormattedDateISO(new Date());
+      }
+
+      const timeInput = document.getElementById('rescheduleTimeInput');
+      if (timeInput) {
+        timeInput.value = pet.time || '10:00';
+      }
+
+      const staffSelect = document.getElementById('rescheduleStaffSelect');
+      if (staffSelect) {
+        if (store.staff && store.staff.length > 0) {
+          staffSelect.innerHTML = store.staff.map(s => `<option value="${s.name}" ${s.name === pet.staff ? 'selected' : ''}>${s.name} (${s.role})</option>`).join('');
+        } else {
+          staffSelect.value = pet.staff || 'Mariana Silva';
+        }
+      }
+
+      const statusSelect = document.getElementById('rescheduleStatusSelect');
+      if (statusSelect) {
+        statusSelect.value = pet.status || 'agendado';
+      }
+
+      const notesInput = document.getElementById('rescheduleNotesInput');
+      if (notesInput) {
+        notesInput.value = pet.rescheduleReason || '';
+      }
+
+      const modal = document.getElementById('reschedulePetModal');
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closeReschedulePetModal() {
+      const modal = document.getElementById('reschedulePetModal');
+      if (modal) modal.classList.add('hidden');
+      currentReschedulePetId = null;
+    }
+
+    function handleConfirmReschedule(event) {
+      if (event) event.preventDefault();
+      if (!currentReschedulePetId) return;
+
+      const pet = store.pets.find(p => p.id === currentReschedulePetId);
+      if (!pet) return;
+
+      const newDate = document.getElementById('rescheduleDateInput')?.value || pet.date;
+      const newTime = document.getElementById('rescheduleTimeInput')?.value || pet.time;
+      const newStaff = document.getElementById('rescheduleStaffSelect')?.value || pet.staff;
+      const newStatus = document.getElementById('rescheduleStatusSelect')?.value || pet.status;
+      const reason = document.getElementById('rescheduleNotesInput')?.value || '';
+
+      pet.date = newDate;
+      pet.time = newTime;
+      pet.staff = newStaff;
+      pet.status = newStatus;
+      if (reason) {
+        pet.rescheduleReason = reason;
+        pet.notes = (pet.notes ? pet.notes + '\n' : '') + `[Reagendado para ${newDate} às ${newTime}]: ${reason}`;
+      }
+
+      store.save();
+      renderAgenda();
+      closeReschedulePetModal();
+      showToast(`📅 ${pet.name} reagendado com sucesso para ${newDate} às ${newTime}!`);
     }
 
     function quickSendWhatsApp(petId) {
@@ -16470,6 +16998,17 @@
       document.getElementById('detailModalService').textContent = pet.service;
       document.getElementById('detailModalStaff').textContent = `${pet.staff} (Responsável)`;
       document.getElementById('detailModalNotes').textContent = pet.notes || 'Nenhuma restrição alimentar ou dermatológica informada.';
+
+      const detailStatusSelect = document.getElementById('detailModalStatusSelect');
+      if (detailStatusSelect) {
+        detailStatusSelect.value = pet.status || 'agendado';
+        detailStatusSelect.className = `text-xs font-bold rounded-lg px-2.5 py-1 border cursor-pointer shadow-xs focus:ring-2 focus:ring-brand-500 ${getStatusBadgeClasses(pet.status)}`;
+      }
+
+      const timestampsEl = document.getElementById('detailModalTimestamps');
+      if (timestampsEl) {
+        timestampsEl.textContent = `Check-in: ${pet.checkinTime || (pet.status !== 'agendado' ? pet.time : '--:--')} • Check-out: ${pet.checkoutTime || (pet.status === 'entregue' ? pet.time : '--:--')}`;
+      }
 
       enrichPetTechnicalProfile(pet);
       const techProfileEl = document.getElementById('detailModalTechProfile');
@@ -22721,6 +23260,7 @@
     // --------------------------------------------------------
     const MODAL_DISMISS_CONFIG = [
       { id: 'petDetailModal', closeFn: () => closePetDetailModal() },
+      { id: 'reschedulePetModal', closeFn: () => typeof closeReschedulePetModal === 'function' && closeReschedulePetModal() },
       { id: 'newPetModal', closeFn: () => closeNewPetModal() },
       { id: 'pwaInstallModal', closeFn: () => closePwaInstallModal() },
       { id: 'petPaymentModal', closeFn: () => typeof closePetPaymentModal === 'function' && closePetPaymentModal() },
@@ -22741,6 +23281,16 @@
     function initModalDismissHandlers() {
       if (modalDismissInitialized) return;
       modalDismissInitialized = true;
+
+      // Fechar popover de 3 pontinhos ao clicar fora
+      window.addEventListener('click', (e) => {
+        const popover = document.getElementById('petQuickActionGlobalPopover');
+        if (popover && !popover.classList.contains('hidden')) {
+          if (!popover.contains(e.target) && !e.target.closest('[onclick*="togglePetActionMenu"]')) {
+            closePetActionMenu();
+          }
+        }
+      });
 
       // Registrar clique fora (backdrop overlay) para todos os modais
       MODAL_DISMISS_CONFIG.forEach(cfg => {
@@ -22765,6 +23315,16 @@
 
       // Registrar tecla ESC globalmente
       window.addEventListener('keydown', (e) => {
+        // Fechar popover de 3 pontinhos com Escape se estiver aberto
+        const popover = document.getElementById('petQuickActionGlobalPopover');
+        if (popover && !popover.classList.contains('hidden')) {
+          if (e.key === 'Escape' || e.key === 'Esc') {
+            e.preventDefault();
+            closePetActionMenu();
+            return;
+          }
+        }
+
         if (e.key === 'Escape' || e.key === 'Esc') {
           // Encontra os modais abertos no momento em ordem inversa para fechar o do topo primeiro
           for (let i = MODAL_DISMISS_CONFIG.length - 1; i >= 0; i--) {
